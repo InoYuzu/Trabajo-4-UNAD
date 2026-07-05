@@ -1,0 +1,67 @@
+basicConfig(
+    filename="sistema_errores.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    encoding="utf-8")
+
+class ServicioError(Exception):
+    """Excepción base para errores en el módulo de servicios."""
+    pass
+
+class ParametroInvalidoError(ServicioError):
+    """Se lanza cuando los días, horas o valores son negativos o inválidos."""
+    pass
+
+
+class Servicio(ABC):
+    def __init__(self, nombre: str, precio_base: float):
+        if precio_base < 0:
+            raise ParametroInvalidoError("El precio base no puede ser negativo.")
+        self._nombre = nombre         
+        Atributo protegido / encapsulado
+        self._precio_base = precio_base
+
+    def nombre(self):
+        return self._nombre
+
+    def calcular_costo(self, *args, **kwargs) -> float:
+        """Método abstracto para implementar Polimorfismo."""
+        pass
+        
+    def obtener_descripcion(self) -> str:
+        """Método abstracto para describir el servicio."""
+        pass
+
+class ReservaSala(Servicio):
+    def __init__(self, precio_base: float, capacidad: int):
+        super().__init__("Reserva de Sala", precio_base)
+        self.capacidad = capacidad
+
+    def calcular_costo(self, horas: int, impuesto: float = 0.19) -> float:
+        """Cálculo de costo con variante de impuesto opcional."""
+        if horas <= 0:
+            raise ParametroInvalidoError("Las horas de reserva deben ser mayores a cero.")
+        
+        costo_total = self._precio_base * horas
+        return costo_total + (costo_total * impuesto)
+
+    def obtener_descripcion(self) -> str:
+        return f"Servicio: {self.nombre} (Capacidad: {self.capacidad} personas)."
+
+class AlquilerEquipo(Servicio):
+    def __init__(self, precio_base: float, tipo_equipo: str):
+        super().__init__("Alquiler de Equipos", precio_base)
+        self.tipo_equipo = tipo_equipo
+
+    def calcular_costo(self, dias: int, descuento: float = 0.0) -> float:
+        """Cálculo de costo con variante de descuento opcional."""
+        if dias <= 0:
+            raise ParametroInvalidoError("Los días de alquiler deben ser mayores a cero.")
+        if not (0.0 <= descuento <= 1.0):
+            raise ParametroInvalidoError("El descuento debe ser un porcentaje decimal entre 0 y 1.")
+        
+        costo_total = self._precio_base * dias
+        return costo_total - (costo_total * descuento)
+
+    def obtener_descripcion(self) -> str:
+        return f"Servicio: {self.nombre} (Equipo: {self.tipo_equipo})."
